@@ -4,6 +4,8 @@ import model.Message;
 import model.MessageStorage;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
+import org.xml.sax.SAXException;
+import storage.XMLHistory;
 import util.MessageExchange;
 
 import javax.servlet.ServletException;
@@ -11,19 +13,25 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 
 
 @WebServlet("/chat")
 public class Servlet extends HttpServlet{
-    private SimpleDateFormat timeFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm");
+    private SimpleDateFormat timeFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+    private int id = 0;
     @Override
     public void init() throws ServletException {
-
+        try {
+            loadHistory();
+        } catch (SAXException | IOException | ParserConfigurationException | TransformerException e) {
+            System.out.println(e);
+        }
     }
 
     @Override
@@ -53,10 +61,15 @@ public class Servlet extends HttpServlet{
             Message m = MessageExchange.getClientMessage(json);
             Date time = new Date();
             System.out.println(timeFormat.format(time) + " " + m.getUser() + " : " + m.getText());
-            m.setAction("POST");
+            m.setActionToDo("POST");
+            m.setDate(time);
+            m.setId(id);
+            id++;
             MessageStorage.addMessage(m);
+            XMLHistory.addData(m);
             response.setStatus(HttpServletResponse.SC_OK);
-        } catch (ParseException e) {
+        } catch (ParseException | ParserConfigurationException | SAXException | TransformerException e) {
+            System.out.println(e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
@@ -67,5 +80,13 @@ public class Servlet extends HttpServlet{
         jsonObject.put("messages", MessageExchange.ListToJSONArray(MessageStorage.getSubHistory(index)));
         jsonObject.put("token", MessageExchange.getToken(MessageStorage.getSize()));
         return jsonObject.toJSONString();
+    }
+
+    private void loadHistory() throws SAXException, IOException, ParserConfigurationException, TransformerException  {
+        if (XMLHistory.doesStorageExist()) {
+            id = MessageStorage.addAll(XMLHistory.getMessages());
+        } else {
+            XMLHistory.createStorage();
+        }
     }
 }

@@ -1,5 +1,7 @@
 package model;
 
+import java.util.Date;
+
 public class Message {
 
     private int id;
@@ -7,13 +9,37 @@ public class Message {
     private String text;
     private String actionToDo;
     private boolean deleted;
+    private Date date;
 
-    public String getAction() {
+    public Message() {
+        id = -1;
+        deleted = false;
+        user = text = actionToDo = "";
+    }
+
+    public Message (int id, String user, String text, String actionToDo, boolean deleted, Date date) {
+        this.id = id;
+        this.user = user;
+        this.text = text;
+        this.actionToDo = actionToDo;
+        this.deleted = deleted;
+        this.date = date;
+    }
+
+    public String getActionToDo() {
         return actionToDo;
     }
 
-    public void setAction(String action) {
-        actionToDo = action;
+    public void setActionToDo(String actionToDo) {
+        this.actionToDo = actionToDo;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public Date getDate() {
+        return date;
     }
 
     public void setDeleted(boolean deleted) {

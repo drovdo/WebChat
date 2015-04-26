@@ -33,7 +33,7 @@ public final class MessageExchange {
             jo.put("text", messages.get(i).getText());
             jo.put("deleted", messages.get(i).isDeleted());
             jo.put("userFlag", false);
-            jo.put("actionToDo", messages.get(i).getAction());
+            jo.put("actionToDo", messages.get(i).getActionToDo());
             array.add(jo);
         }
         return array;

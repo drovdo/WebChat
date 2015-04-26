@@ -15,6 +15,11 @@ public final class MessageStorage {
         history.add(m);
     }
 
+    public static int addAll (List<Message> list) {
+        history.addAll(list);
+        return list.size();
+    }
+
     public static int getSize() {
         return history.size();
     }
