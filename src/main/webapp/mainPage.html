@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head lang = "en">
+	<meta charset="utf-8">
+	<title> <3 Chatty </title>
+	<script src="resources/js/jquery-1.10.2.js"></script>
+	<script src="resources/js/scripts.js"></script>
+</head>
+<body onload = run()>
+<link rel="stylesheet" href="resources/css/styles.css">
+<img id = "chattyImg" src="resources/images/chatty.png" alt = "<3 Chatty">
+<span id = "serverOn">Server is availible!</span>
+<div class = "chat">
+	<div class = "panel">
+		<textarea disabled id = "name"></textarea>
+		<input type = "text" id = "enterName"></input>
+		<button class = "button" id = "changeNameBtn">Enter name</button>
+	</div>
+	<div class = "messageArea">
+	</div>
+	<div class = "userArea">
+		<textarea id = "messageText" placeholder = "Type your message here"></textarea>
+		<button class = "button" id = "sendBtn"> Send </button>
+	</div>
+</div>
+</body>
+</html>

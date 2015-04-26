@@ -1,0 +1,161 @@
+body {
+	background: RGB(186,218,191);
+}
+textarea {
+	resize: none;
+	overflow: auto;
+}
+#chattyImg{
+	position: absolute;
+	top: 3%;
+	left: 5%;
+	width: 20%;
+	float: left;
+}
+#serverOn {
+	position: absolute;
+	top: 7%;
+	left: 80%;
+	color: RGB(44,77,55);
+}
+.chat {
+	position: absolute;
+	left: 5%;
+	top: 15%;
+	width: 90%;
+	height: 80%;
+}
+.panel {
+	position: absolute;
+	border: solid 2px RGB(115,129,106);
+	left: 5%;
+	top: 80%;
+	height: 21%;
+	width: 25%;
+	color: RGB(55,135,82);
+	overflow: hidden;
+}
+#name {
+	position: absolute;
+	left: 5%;
+	top: 5%;
+	width: 88%;
+	height: 20%;
+}
+#enterName {
+	position: absolute;
+	left: 5%;
+	top: 55%;
+	width: 50%;
+	height: 20%;
+}
+#changeNameBtn {
+	position: absolute;
+	left: 70%;
+	top: 45%;
+}
+
+.button {
+	position: absolute;
+	background-color: RGB(123,179,141);
+	-moz-border-radius: 30%;
+	-webkit-border-radius: 30%;
+	border-radius: 30%;
+	cursor: pointer;
+	color: #ffffff;
+	font-family: arial;
+	font-size: normal;
+	font-weight: bold;
+	height: 40px;
+	width: 70px;
+}
+.button:hover {
+	background-color: RGB(55,135,82);
+}
+.userArea {
+	border: solid 2px RGB(115,129,106);
+	position: absolute;
+	left: 31%;
+	top: 80%;
+	height: 21%;
+	width: 68%;
+	overflow: hidden;
+}
+#messageText {
+	border: solid 2px RGB(115,129,106);
+	background-color: RGB(123,179,141);
+	position: absolute;
+	left: 0%;
+	top: 0%;
+	height: 99%;
+	width: 80%;
+}
+#sendBtn {
+	position: absolute;
+	left: 87%;
+	top: 40%;
+}
+.messageArea {
+	position: absolute;
+	border: solid 2px RGB(115,129,106);
+	left: 5%;
+	top: 1%;
+	height: 77%;
+	background-color: RGB(227, 241, 226);
+	width: 94%;
+	overflow-y: auto;
+}
+.friendMessage {
+	position: relative;
+	left: 3%;
+	top: 2%;
+	width: 97%;
+	color: green;
+	font-size: larger;
+	word-wrap: break-word;
+}
+.friendMessage span {
+	white-space: pre-wrap;
+}
+.userMessage {
+	position: relative;
+	left: 3%;
+	top: 2%;
+	width: 97%;
+	color: green;
+	font-size: larger;
+	word-wrap: break-word;
+}
+.userMessage span {
+	white-space: pre-wrap;
+}
+.userMessage div {
+	position: relative;
+	left: 0%;
+	width: 80%;
+}
+#iconDelete {
+	position: absolute;
+	left: 96%;
+	top: 50%;
+	height: 20px;
+	width: 20px;
+	cursor: pointer;
+}
+#iconEdit {
+	position: absolute;
+	left: 93%;
+	top: 50%;
+	height: 20px;
+	width: 20px;
+	cursor: pointer;
+}
+.userName {
+	font-weight: 800;
+	color: RGB(44,77,55);
+}
+.friendName {
+	font-weight: 800;
+	color: RGB(94,151,66);
+}
+
