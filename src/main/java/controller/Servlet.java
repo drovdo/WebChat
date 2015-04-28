@@ -24,7 +24,7 @@ import java.util.Date;
 @WebServlet("/chat")
 public class Servlet extends HttpServlet{
     private SimpleDateFormat timeFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-    private int id = 0;
+    private Integer id = 0;
     @Override
     public void init() throws ServletException {
         try {
@@ -64,7 +64,9 @@ public class Servlet extends HttpServlet{
             m.setActionToDo("POST");
             m.setDate(time);
             m.setId(id);
-            id++;
+            synchronized (id) {
+                id++;
+            }
             MessageStorage.addMessage(m);
             XMLHistory.addData(m);
             response.setStatus(HttpServletResponse.SC_OK);
@@ -84,7 +86,9 @@ public class Servlet extends HttpServlet{
 
     private void loadHistory() throws SAXException, IOException, ParserConfigurationException, TransformerException  {
         if (XMLHistory.doesStorageExist()) {
-            id = MessageStorage.addAll(XMLHistory.getMessages());
+            synchronized (id) {
+                id = MessageStorage.addAll(XMLHistory.getMessages());
+            }
         } else {
             XMLHistory.createStorage();
         }
