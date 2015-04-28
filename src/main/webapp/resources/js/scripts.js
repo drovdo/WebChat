@@ -271,9 +271,9 @@ function fatalError() {
 		errorFlag = false;
 		appState.token = "TN11EN";
 		appState.tokenToEdit = "TK11EN";
-		var conf = confirm("Server seems to shut down.\nThe current history is not valid anymore :(.\nWoud you like to delete it?");
-		if (conf == true)
-			$(".messageArea").empty();
+		var conf = confirm("Server seems to shut down.\nThe message history is not valid any more :(\nWould you like to delete it?");
+		 if (conf)
+		 	$(".messageArea").empty();
 		messageList = new JSONArray();
 	 }
 	 
@@ -335,6 +335,8 @@ function ajax(method, url, data, continueWith, continueWithError, fatalError) {
 		}
 		$("#serverOn").css({"color" : "RGB(44, 77, 55)", "font-size" : "medium"});
 		$("#serverOn").text("Server is availible!");
+		if (!errorFlag)
+			$(".messageArea").empty();
 		errorFlag = true;
 		continueWith(xhr.responseText);
 	};  
