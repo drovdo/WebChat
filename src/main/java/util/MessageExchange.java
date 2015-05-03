@@ -1,6 +1,7 @@
 package util;
 
 import model.Message;
+import model.Request;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
@@ -23,15 +24,14 @@ public final class MessageExchange {
         return (Integer.valueOf(token.substring(2, token.length() - 2)) - 11) / 8;
     }
 
-    public static JSONArray ListToJSONArray(List<Message> messages)
+    public static JSONArray ListToJSONArray(List<Request> messages)
     {
         JSONArray array = new JSONArray();
         for(int i = 0; i < messages.size(); i++) {
             JSONObject jo = new JSONObject();
-            jo.put("id", messages.get(i).getId());
-            jo.put("user", messages.get(i).getUser());
-            jo.put("text", messages.get(i).getText());
-            jo.put("deleted", messages.get(i).isDeleted());
+            jo.put("id", messages.get(i).getMessage().getId());
+            jo.put("user", messages.get(i).getMessage().getUser());
+            jo.put("text", messages.get(i).getMessage().getText());
             jo.put("userFlag", false);
             jo.put("actionToDo", messages.get(i).getActionToDo());
             array.add(jo);

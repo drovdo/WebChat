@@ -18,10 +18,13 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.*;
 
 import model.Message;
+import model.Request;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -71,14 +74,6 @@ public final class XMLHistory {
 		date.appendChild(document.createTextNode(timeFormat.format(m.getDate())));
 		message.appendChild(date);
 
-		Element actionToDo = document.createElement("action");
-		actionToDo.appendChild(document.createTextNode(m.getActionToDo()));
-		message.appendChild(actionToDo);
-
-		Element deleted = document.createElement("deleted");
-		deleted.appendChild(document.createTextNode(Boolean.toString(m.isDeleted())));
-		message.appendChild(deleted);
-
 		DOMSource source = new DOMSource(document);
 
 		Transformer transformer = getTransformer();
@@ -87,13 +82,40 @@ public final class XMLHistory {
 		transformer.transform(source, result);
 	}
 
+	public static synchronized void deleteData(Message message) throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException {
+		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+		Document document = documentBuilder.parse(STORAGE_LOCATION);
+		document.getDocumentElement().normalize();
+		Node MessageToUpdate = getNodeById(document, Integer.valueOf(message.getId()).toString());
+
+		if (MessageToUpdate != null) {
+
+			MessageToUpdate.getParentNode().removeChild(MessageToUpdate);
+
+			Transformer transformer = getTransformer();
+
+			DOMSource source = new DOMSource(document);
+			StreamResult result = new StreamResult(new File(STORAGE_LOCATION));
+			transformer.transform(source, result);
+		} else {
+			throw new NullPointerException();
+		}
+	}
+
+	private static Node getNodeById(Document doc, String id) throws XPathExpressionException {
+		XPath xpath = XPathFactory.newInstance().newXPath();
+		XPathExpression expr = xpath.compile("//" + "message" + "[@id='" + id + "']");
+		return (Node) expr.evaluate(doc, XPathConstants.NODE);
+	}
+
 	public static synchronized boolean doesStorageExist() {
 		File file = new File(STORAGE_LOCATION);
 		return file.exists();
 	}
 
-	public static synchronized List<Message> getMessages() throws SAXException, IOException, ParserConfigurationException {
-		List<Message> messages = new ArrayList<>();
+	public static synchronized List<Request> getMessages() throws SAXException, IOException, ParserConfigurationException {
+		List<Request> messages = new ArrayList<>();
 		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 		Document document = documentBuilder.parse(STORAGE_LOCATION);
@@ -106,11 +128,21 @@ public final class XMLHistory {
 			String user = message.getElementsByTagName("author").item(0).getTextContent();
 			String text = message.getElementsByTagName("text").item(0).getTextContent();
 			Date date = timeFormat.parse(message.getElementsByTagName("date").item(0).getTextContent(), new ParsePosition(0));
-			String actionToDo = message.getElementsByTagName("action").item(0).getTextContent();
-			boolean deleted = Boolean.valueOf(message.getElementsByTagName("deleted").item(0).getTextContent());
-			messages.add(new Message(id, user, text, actionToDo, deleted, date));
+			messages.add(new Request(new Message(id, user, text, date), "POST"));
 		}
 		return messages;
+	}
+
+	public static synchronized Integer getLastId() throws SAXException, IOException, ParserConfigurationException {
+		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+		Document document = documentBuilder.parse(STORAGE_LOCATION);
+		document.getDocumentElement().normalize();
+		Element root = document.getDocumentElement();
+		NodeList messageList = root.getElementsByTagName("message");
+		Element message = (Element) messageList.item(messageList.getLength() - 1);
+		Integer lastId = Integer.valueOf(message.getAttribute("id"));
+		return lastId;
 	}
 
 	private static Transformer getTransformer() throws TransformerConfigurationException {

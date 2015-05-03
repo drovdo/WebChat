@@ -26,12 +26,10 @@ function run(){
 }
 
 function createMessage(message) {
-	if (message.deleted == false) {
-		if (message.user == document.getElementById("name").innerHTML) {
-			message.userFlag = true;
-		}
-		addMessage(message);
+	if (message.user == document.getElementById("name").innerHTML) {
+		message.userFlag = true;
 	}
+	addMessage(message);
 }
 
 function setName(name) {

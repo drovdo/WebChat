@@ -7,31 +7,18 @@ public class Message {
     private int id;
     private String user;
     private String text;
-    private String actionToDo;
-    private boolean deleted;
     private Date date;
 
     public Message() {
         id = -1;
-        deleted = false;
-        user = text = actionToDo = "";
+        user = text  = "";
     }
 
-    public Message (int id, String user, String text, String actionToDo, boolean deleted, Date date) {
+    public Message (int id, String user, String text, Date date) {
         this.id = id;
         this.user = user;
         this.text = text;
-        this.actionToDo = actionToDo;
-        this.deleted = deleted;
         this.date = date;
-    }
-
-    public String getActionToDo() {
-        return actionToDo;
-    }
-
-    public void setActionToDo(String actionToDo) {
-        this.actionToDo = actionToDo;
     }
 
     public void setDate(Date date) {
@@ -40,14 +27,6 @@ public class Message {
 
     public Date getDate() {
         return date;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
-    public boolean isDeleted() {
-        return deleted;
     }
 
     public int getId() {

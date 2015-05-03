@@ -1,7 +1,8 @@
 package controller;
 
 import model.Message;
-import model.MessageStorage;
+import model.Request;
+import model.RequestStorage;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.xml.sax.SAXException;
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -40,11 +42,11 @@ public class Servlet extends HttpServlet{
         String token = request.getParameter("token");
         if (token != null && !"".equals(token)) {
             int index = MessageExchange.getIndex(token);
-            String tasks = formResponse(index);
+            String messages = formResponse(index);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             PrintWriter out = response.getWriter();
-            out.print(tasks);
+            out.print(messages);
             out.flush();
         } else {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "'token' parameter needed");
@@ -61,16 +63,40 @@ public class Servlet extends HttpServlet{
             Message m = MessageExchange.getClientMessage(json);
             Date time = new Date();
             System.out.println(timeFormat.format(time) + " " + m.getUser() + " : " + m.getText());
-            m.setActionToDo("POST");
+            Request r = new Request();
+            r.setActionToDo("POST");
             m.setDate(time);
             m.setId(id);
+            r.setMessage(m);
+            XMLHistory.addData(m);
+            RequestStorage.addRequest(r);
             synchronized (id) {
                 id++;
             }
-            MessageStorage.addMessage(m);
-            XMLHistory.addData(m);
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (ParseException | ParserConfigurationException | SAXException | TransformerException e) {
+            System.out.println(e);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String data = MessageExchange.getMessageBody(request);
+        try {
+            JSONObject json = MessageExchange.getJSONObject(data);
+            Message m = MessageExchange.getClientMessage(json);
+            XMLHistory.deleteData(m);
+            Request r = new Request();
+            r.setActionToDo("DELETE");
+            r.setMessage(m);
+            RequestStorage.addRequest(r);
+            Date time = new Date();
+            System.out.println(timeFormat.format(time) + " Message with id  " + m.getId() + " is deleted");
+            response.setStatus(HttpServletResponse.SC_OK);
+        } catch (NullPointerException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message does not exist");
+        } catch (ParseException | ParserConfigurationException | SAXException | TransformerException | XPathExpressionException e) {
             System.out.println(e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
@@ -79,15 +105,17 @@ public class Servlet extends HttpServlet{
     @SuppressWarnings("unchecked")
     private String formResponse(int index) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("messages", MessageExchange.ListToJSONArray(MessageStorage.getSubHistory(index)));
-        jsonObject.put("token", MessageExchange.getToken(MessageStorage.getSize()));
+        jsonObject.put("messages", MessageExchange.ListToJSONArray(RequestStorage.getSubHistory(index)));
+        jsonObject.put("token", MessageExchange.getToken(RequestStorage.getSize()));
         return jsonObject.toJSONString();
     }
 
     private void loadHistory() throws SAXException, IOException, ParserConfigurationException, TransformerException  {
         if (XMLHistory.doesStorageExist()) {
+            RequestStorage.addAll(XMLHistory.getMessages());
             synchronized (id) {
-                id = MessageStorage.addAll(XMLHistory.getMessages());
+                id = XMLHistory.getLastId();
+                id++;
             }
         } else {
             XMLHistory.createStorage();
