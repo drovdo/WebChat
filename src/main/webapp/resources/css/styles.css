@@ -5,6 +5,43 @@ textarea {
 	resize: none;
 	overflow: auto;
 }
+.crying {
+	width: 20%;
+	height: 25%;
+}
+#content404 {
+	position: absolute;
+	top: 30%;
+	left: 17%;
+}
+#content500 {
+	position: absolute;
+	top: 30%;
+	left: 33%;
+}
+#content400 {
+	position: absolute;
+	top: 30%;
+	left: 30%;
+}
+.error {
+	position: absolute;
+	top: 7%;
+	width: 100%;
+	text-align: center;
+	font-size: 300%;
+	font-weight: bold;
+	color: RGB(44,77,55);
+}
+.errorMessage {
+	position: absolute;
+	top: 20%;
+	width: 100%;
+	text-align: center;
+	font-size: 200%;
+	font-weight: bold;
+	color: RGB(44,77,55);
+}
 #chattyImg{
 	position: absolute;
 	top: 3%;
