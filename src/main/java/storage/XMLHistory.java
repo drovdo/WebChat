@@ -87,11 +87,41 @@ public final class XMLHistory {
 		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 		Document document = documentBuilder.parse(STORAGE_LOCATION);
 		document.getDocumentElement().normalize();
-		Node MessageToUpdate = getNodeById(document, Integer.valueOf(message.getId()).toString());
+		Node messageToDelete = getNodeById(document, Integer.valueOf(message.getId()).toString());
 
-		if (MessageToUpdate != null) {
+		if (messageToDelete != null) {
 
-			MessageToUpdate.getParentNode().removeChild(MessageToUpdate);
+			messageToDelete.getParentNode().removeChild(messageToDelete);
+
+			Transformer transformer = getTransformer();
+
+			DOMSource source = new DOMSource(document);
+			StreamResult result = new StreamResult(new File(STORAGE_LOCATION));
+			transformer.transform(source, result);
+		} else {
+			throw new NullPointerException();
+		}
+	}
+
+	public static synchronized void editData(Message message) throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException {
+		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+		Document document = documentBuilder.parse(STORAGE_LOCATION);
+		document.getDocumentElement().normalize();
+		Node messageToUpdate = getNodeById(document, Integer.valueOf(message.getId()).toString());
+
+		if (messageToUpdate != null) {
+
+			NodeList childNodes = messageToUpdate.getChildNodes();
+
+			for (int i = 0; i < childNodes.getLength(); i++) {
+
+				Node node = childNodes.item(i);
+
+				if ("text".equals(node.getNodeName())) {
+					node.setTextContent(message.getText());
+				}
+			}
 
 			Transformer transformer = getTransformer();
 

@@ -241,7 +241,7 @@ function restoreHistory(continueWith) {
 				var message = document.getElementById(messages[i].id);
 				deleteMessage(message)
 			}
-			else if (messages[i].actionToDo == "EDIT") {
+			else if (messages[i].actionToDo == "PUT") {
 				var message = document.getElementById(messages[i].id);
 				editMessage(message, messages[i].text);
 			}

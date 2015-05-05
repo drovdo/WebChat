@@ -102,6 +102,28 @@ public class Servlet extends HttpServlet{
         }
     }
 
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String data = MessageExchange.getMessageBody(request);
+        try {
+            JSONObject json = MessageExchange.getJSONObject(data);
+            Message m = MessageExchange.getClientMessage(json);
+            XMLHistory.editData(m);
+            Request r = new Request();
+            r.setActionToDo("PUT");
+            r.setMessage(m);
+            RequestStorage.addRequest(r);
+            Date time = new Date();
+            System.out.println(timeFormat.format(time) + " Message with id  " + m.getId() + " is edited : " + m.getText());
+            response.setStatus(HttpServletResponse.SC_OK);
+        } catch (NullPointerException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Message does not exist");
+        } catch (ParseException | ParserConfigurationException | SAXException | TransformerException | XPathExpressionException e) {
+            System.out.println(e);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private String formResponse(int index) {
         JSONObject jsonObject = new JSONObject();
