@@ -170,8 +170,11 @@ public final class XMLHistory {
 		document.getDocumentElement().normalize();
 		Element root = document.getDocumentElement();
 		NodeList messageList = root.getElementsByTagName("message");
-		Element message = (Element) messageList.item(messageList.getLength() - 1);
-		Integer lastId = Integer.valueOf(message.getAttribute("id"));
+		Integer lastId = -1;
+		if (messageList.getLength() != 0) {
+			Element message = (Element) messageList.item(messageList.getLength() - 1);
+			lastId = Integer.valueOf(message.getAttribute("id"));
+		}
 		return lastId;
 	}
 

@@ -321,7 +321,8 @@ function ajax(method, url, data, continueWith, continueWithError, fatalError) {
 	xhr.onload = function () {
 		if (xhr.readyState !== 4)
 			return;
-
+		if (xhr.status == 304)
+			return;
 		if(xhr.status != 200) {
 			continueWithError('Error on the server side, response ' + xhr.status);
 			return;
