@@ -15,15 +15,6 @@ public final class MessageExchange {
 
     private static JSONParser jsonParser = new JSONParser();
 
-    public static String getToken(int index) {
-        Integer number = index * 8 + 11;
-        return "TN" + number + "EN";
-    }
-
-    public static int getIndex(String token) {
-        return (Integer.valueOf(token.substring(2, token.length() - 2)) - 11) / 8;
-    }
-
     public static JSONArray ListToJSONArray(List<Request> messages)
     {
         JSONArray array = new JSONArray();

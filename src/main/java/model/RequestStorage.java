@@ -7,6 +7,13 @@ import java.util.List;
 public final class RequestStorage {
     private static List<Request> history = Collections.synchronizedList(new ArrayList<Request>());
 
+    public static boolean isEmpty() {
+        return history.isEmpty();
+    }
+
+    public static void removeAll() {
+        history.removeAll(history);
+    }
     public static List<Request> getStorage() {
         return history;
     }
@@ -19,9 +26,9 @@ public final class RequestStorage {
         history.addAll(list);
     }
 
-    public static int getSize() {
+    /*public static int getSize() {
         return history.size();
-    }
+    }*/
 
     public static List<Request> getSubHistory(int index) {
         return history.subList(index, history.size());

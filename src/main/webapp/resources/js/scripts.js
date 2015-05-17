@@ -5,10 +5,7 @@ var theMessage = function(user, text) {
 	};
 };
 
-var appState = {
-	mainUrl : "/chat",
-	token : "TN11EN"
-};
+var mainUrl = "/chat";
 
 var messageList = [];
 
@@ -22,7 +19,7 @@ function run(){
 		document.getElementById("changeNameBtn").innerHTML = "Change name";
 	else
 		$("#enterName").attr("placeholder", "Type your name here");
-	restoreHistory();
+	poll(true);
 }
 
 function createMessage(message) {
@@ -203,147 +200,88 @@ function restoreLocal(lsName) {
 	return item && JSON.parse(item);
 }
 
-function addToServer(message, continueWith) {
-	post(appState.mainUrl, JSON.stringify(message), continueWith, function(message) {
-		defaultErrorHandler(message);
-		wait();
+function addToServer(message) {
+	$.ajax({
+		url: mainUrl,
+		type: 'POST',
+		data: JSON.stringify(message),
+		success: function (data) {
+		},
+		error: function () {
+		}
 	});
 }
 
-function deleteFromServer(message, continueWith) {
-	del(appState.mainUrl, JSON.stringify(message), continueWith, function(message) {
-		defaultErrorHandler(message);
-		wait();
+function editOnServer(message) {
+	$.ajax({
+		url: mainUrl,
+		type: 'PUT',
+		data: JSON.stringify(message),
+		success: function (data) {
+		},
+		error: function () {
+		}
 	});
 }
 
-function editOnServer(message, continueWith) {
-	put(appState.mainUrl, JSON.stringify(message), continueWith, function(message) {
-		defaultErrorHandler(message);
-		wait();
+function deleteFromServer(message) {
+	$.ajax({
+		url: mainUrl,
+		type: 'DELETE',
+		data: JSON.stringify(message),
+		success: function (data) {
+		},
+		error: function () {
+		}
 	});
 }
 
 var errorFlag = true;
 
-function restoreHistory(continueWith) {
-	var url = appState.mainUrl + '?token=' + appState.token;
-	get(url, function(responseText) {
-		console.assert(responseText != null);
-		var response = JSON.parse(responseText);
-		appState.token = response.token;
-		var messages = response.messages;
-		for (var i = 0; i < messages.length; i++) {
-			if (messages[i].actionToDo == "POST") {
-				createMessage(messages[i]);
-			}
-			else if (messages[i].actionToDo == "DELETE") {
-				var message = document.getElementById(messages[i].id);
-				deleteMessage(message)
-			}
-			else if (messages[i].actionToDo == "PUT") {
-				var message = document.getElementById(messages[i].id);
-				editMessage(message, messages[i].text);
-			}
-		}
-		continueWith && continueWith();
-	}, function(message) {
-		wait();
-	}, function() {
-		fatalError();
-		wait();
-	});  
-	setTimeout(function() {
-		restoreHistory(continueWith);
-	}, 1000);
-}
-
-function defaultErrorHandler(message) {
-	alert(message);
-}
-
 function fatalError() {
 	$("#serverOn").css({"color" : "red", "font-size" : "large"});
 	$("#serverOn").text("SERVER IS UNAVAILIBLE!");
-	 if (errorFlag == true) {
+	if (errorFlag == true) {
 		errorFlag = false;
-		appState.token = "TN11EN";
-		appState.tokenToEdit = "TK11EN";
 		var conf = confirm("Server seems to shut down.\nThe message history is not valid any more :(\nWould you like to delete it?");
-		 if (conf)
-		 	$(".messageArea").empty();
-		messageList = new JSONArray();
-	 }
-	 
-}
-
-function wait() {
-	var url = appState.mainUrl + '?token=' + appState.token;
-	get(url, function() {
-	}, function() {
-		setTimeout(function() {
-			wait();
-		});
-	});
-}
-
-function get(url, continueWith, continueWithError, fatalError) {
-	ajax('GET', url, null, continueWith, continueWithError, fatalError);	
-}
-
-function post(url, data, continueWith, continueWithError) {
-	ajax('POST', url, data, continueWith, continueWithError);	
-}
-
-function put(url, data, continueWith, continueWithError) {
-	ajax('PUT', url, data, continueWith, continueWithError);	
-}
-
-function del(url, data, continueWith, continueWithError) {
-	ajax('DELETE', url, data, continueWith, continueWithError);	
-}
-
-function isError(text) {
-	if(text == "")
-		return false;
-	try {
-		var obj = JSON.parse(text);
-	} catch(ex) {
-		return true;
-	}
-	return !!obj.error;
-}
-
-function ajax(method, url, data, continueWith, continueWithError, fatalError) {
-	var xhr = new XMLHttpRequest();
-	continueWithError = continueWithError || defaultErrorHandler;
-	xhr.open(method, url, true);
-	xhr.onload = function () {
-		if (xhr.readyState !== 4)
-			return;
-		if (xhr.status == 304)
-			return;
-		if(xhr.status != 200) {
-			continueWithError('Error on the server side, response ' + xhr.status);
-			return;
-		}
-
-		if(isError(xhr.responseText)) {
-			continueWithError('Error on the server side, response ' + xhr.responseText);
-			return;
-		}
-		$("#serverOn").css({"color" : "RGB(44, 77, 55)", "font-size" : "medium"});
-		$("#serverOn").text("Server is availible!");
-		if (!errorFlag)
+		if (conf)
 			$(".messageArea").empty();
-		errorFlag = true;
-		continueWith(xhr.responseText);
-	};  
-	xhr.ontimeout = function () {
-	    continueWithError('Server timed out !');
+		messageList = [];
 	}
-	xhr.onerror = function () {
-	    fatalError();
-	};
-	xhr.send(data);
+
 }
+
+function poll(isHistory) {
+	$.ajax({
+		url: mainUrl + "?flag=" + isHistory,
+		type: 'GET',
+		dataType: 'json',
+		success: function(responseText){
+			$("#serverOn").css({"color" : "RGB(44, 77, 55)", "font-size" : "medium"});
+			$("#serverOn").text("Server is availible!");
+			if (!errorFlag)
+				$(".messageArea").empty();
+			errorFlag = true;
+			var messages = responseText.messages;
+			for (var i = 0; i < messages.length; i++) {
+				if (messages[i].actionToDo == "POST") {
+					createMessage(messages[i]);
+				}
+				else if (messages[i].actionToDo == "DELETE") {
+					var message = document.getElementById(messages[i].id);
+					deleteMessage(message)
+				}
+				else if (messages[i].actionToDo == "PUT") {
+					var message = document.getElementById(messages[i].id);
+					editMessage(message, messages[i].text);
+				}
+			}
+		},
+		error: function(){
+			fatalError();
+		},
+		complete: function() {
+			setTimeout(poll(!errorFlag), 1000);
+		}
+	});
+};

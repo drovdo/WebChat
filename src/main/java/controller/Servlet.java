@@ -4,13 +4,15 @@ import model.Message;
 import model.Request;
 import model.RequestStorage;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.config.ConfigurationFactory;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.xml.sax.SAXException;
 import storage.XMLHistory;
 import util.MessageExchange;
 
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -21,45 +23,86 @@ import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import org.apache.logging.log4j.Logger;
 
 
-@WebServlet("/chat")
+@WebServlet(urlPatterns = "/chat", asyncSupported = true)
 public class Servlet extends HttpServlet{
     private static Logger logger = LogManager.getLogger(Servlet.class.getName());
     private Integer id = 0;
-    @Override
-    public void init() throws ServletException {
-        try {
-            loadHistory();
-        } catch (SAXException | IOException | ParserConfigurationException | TransformerException e) {
-            logger.error(e);
-        }
-    }
+    private static List<AsyncContext> contexts = Collections.synchronizedList(new ArrayList<AsyncContext>());
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String token = request.getParameter("token");
-        if (token != null && !"".equals(token)) {
-            int index = MessageExchange.getIndex(token);
-            String messages = formResponse(index);
-            if (messages != "Not modified") {
+        String data = request.getParameter("flag");
+        boolean flag = false;
+        try {
+            flag = Boolean.parseBoolean(data);
+            if (flag) {
+                String messages = "";
+                synchronized (messages) {
+                    loadHistory();
+                    messages = formResponse();
+                    RequestStorage.removeAll();
+                }
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
                 PrintWriter out = response.getWriter();
                 out.print(messages);
                 out.flush();
-            }
-            else
-                response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-        } else {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            logger.error( "Bad request: 'token' parameter needed");
-        }
+            } else {
+                AsyncContext actx = request.startAsync(request, response);
+                actx.setTimeout(30000);
+                contexts.add(actx);
+                actx.addListener(new AsyncListener() {
+                    public void onTimeout(AsyncEvent arg0) throws IOException {
 
+                        HttpServletResponse response = (HttpServletResponse) arg0.getAsyncContext().getResponse();
+                        response.setContentType("application/json");
+                        response.setCharacterEncoding("UTF-8");
+                        PrintWriter out = response.getWriter();
+                        out.print("{\"messages\" : []}");
+                        out.flush();
+                        contexts.remove(arg0.getAsyncContext());
+                    }
+
+                    public void onStartAsync(AsyncEvent arg0) throws IOException {
+                    }
+
+                    public void onError(AsyncEvent arg0) throws IOException {
+                    }
+
+                    public void onComplete(AsyncEvent arg0) throws IOException {
+                    }
+                });
+            }
+        }
+        catch (Exception e) {
+            logger.error(e);
+        }
+    }
+
+    private void doResponse(List<AsyncContext> contexts) {
+        for (AsyncContext ctx : contexts) {
+            HttpServletResponse response = (HttpServletResponse) ctx.getResponse();
+            try {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                String messages = formResponse();
+                PrintWriter out = response.getWriter();
+                out.print(messages);
+                out.flush();
+                ctx.complete();
+            } catch (IOException e) {
+                logger.error(e);
+            }
+        }
+        RequestStorage.removeAll();
     }
 
     @Override
@@ -83,6 +126,9 @@ public class Servlet extends HttpServlet{
                 id++;
             }
             response.setStatus(HttpServletResponse.SC_OK);
+            List<AsyncContext> contexts = new ArrayList<AsyncContext>(this.contexts);
+            this.contexts.clear();
+            doResponse(contexts);
         } catch (ParseException | ParserConfigurationException | SAXException | TransformerException e) {
             logger.info(e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -104,6 +150,9 @@ public class Servlet extends HttpServlet{
             Date time = new Date();
             logger.info("Message with id  " + m.getId() + " is deleted");
             response.setStatus(HttpServletResponse.SC_OK);
+            List<AsyncContext> contexts = new ArrayList<AsyncContext>(this.contexts);
+            this.contexts.clear();
+            doResponse(contexts);
         } catch (NullPointerException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             logger.error("Message does not exist");
@@ -128,6 +177,9 @@ public class Servlet extends HttpServlet{
             Date time = new Date();
             logger.info("Message with id  " + m.getId() + " is edited : " + m.getText());
             response.setStatus(HttpServletResponse.SC_OK);
+            List<AsyncContext> contexts = new ArrayList<AsyncContext>(this.contexts);
+            this.contexts.clear();
+            doResponse(contexts);
         } catch (NullPointerException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             logger.error("Message does not exist");
@@ -138,15 +190,11 @@ public class Servlet extends HttpServlet{
     }
 
     @SuppressWarnings("unchecked")
-    private String formResponse(int index) {
+    private String formResponse() {
         JSONObject jsonObject = new JSONObject();
-        List<Request> subHistory = RequestStorage.getSubHistory(index);
-        if (subHistory.size() != 0) {
-            jsonObject.put("messages", MessageExchange.ListToJSONArray(subHistory));
-            jsonObject.put("token", MessageExchange.getToken(RequestStorage.getSize()));
-            return jsonObject.toJSONString();
-        }
-        return "Not modified";
+        List<Request> history = RequestStorage.getStorage();
+        jsonObject.put("messages", MessageExchange.ListToJSONArray(history));
+        return jsonObject.toJSONString();
     }
 
     private void loadHistory() throws SAXException, IOException, ParserConfigurationException, TransformerException  {
