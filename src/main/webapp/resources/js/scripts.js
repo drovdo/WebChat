@@ -6,13 +6,29 @@ var theMessage = function(user, text) {
 };
 
 var mainUrl = "/chat";
-
+var hidden, visibilityChange;
+var newMessageCounter = 0;
 var messageList = [];
 
 function run(){
 	var appContainer = document.getElementsByClassName("chat")[0];
 	appContainer.addEventListener("click", delegateEvent);
 	appContainer.addEventListener("keydown", delegateEvent);
+	$("title").text("<3 Chatty");
+	if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
+		hidden = "hidden";
+		visibilityChange = "visibilitychange";
+	} else if (typeof document.mozHidden !== "undefined") {
+		hidden = "mozHidden";
+		visibilityChange = "mozvisibilitychange";
+	} else if (typeof document.msHidden !== "undefined") {
+		hidden = "msHidden";
+		visibilityChange = "msvisibilitychange";
+	} else if (typeof document.webkitHidden !== "undefined") {
+		hidden = "webkitHidden";
+		visibilityChange = "webkitvisibilitychange";
+	}
+	document.addEventListener(visibilityChange, handleVisibilityChange);
 	var name = restoreLocal("chat username") || "";
 	setName(name);
 	if (name != "")
@@ -22,10 +38,18 @@ function run(){
 	poll(true);
 }
 
-function createMessage(message) {
-	if (message.user == document.getElementById("name").innerHTML) {
-		message.userFlag = true;
+function handleVisibilityChange() {
+	if (!document[hidden]) {
+		$("title").text("<3 Chatty");
+		newMessageCounter = 0;
 	}
+}
+
+function createMessage(message) {
+	if (message.user == document.getElementById("name").innerHTML)
+		message.userFlag = true;
+	else
+		message.userFlag = false;
 	addMessage(message);
 }
 
@@ -113,6 +137,11 @@ function onChangeNameButtonClick() {
 	setName(name.value);
 	storeLocal("chat username", name.value);
 	name.value = "";
+	$(".messageArea").empty();
+	var tempMessage = messageList;
+	messageList = [];
+	for (var i = 0; i < tempMessage.length; i++)
+		createMessage(tempMessage[i]);
 }
 
 function addMessage(message){
@@ -154,6 +183,15 @@ function addMessage(message){
 	}
 	var items = document.getElementsByClassName("messageArea")[0];
 	items.appendChild(divItem);
+	if (document[hidden]) {
+		newMessageCounter++;
+		if (newMessageCounter == 1)
+			$("title").text(newMessageCounter + " new message");
+		else
+			$("title").text(newMessageCounter + " new messages");
+		var sound = document.getElementById("sound");
+		sound.play();
+	}
 	messageList.push(message);
 	var items = $(".messageArea");
 	items.scrollTop(items[0].scrollHeight - items.height());

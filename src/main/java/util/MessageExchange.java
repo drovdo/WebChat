@@ -23,7 +23,6 @@ public final class MessageExchange {
             jo.put("id", messages.get(i).getMessage().getId());
             jo.put("user", messages.get(i).getMessage().getUser());
             jo.put("text", messages.get(i).getMessage().getText());
-            jo.put("userFlag", false);
             jo.put("actionToDo", messages.get(i).getActionToDo());
             array.add(jo);
         }
