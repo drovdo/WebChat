@@ -65,10 +65,12 @@ function delegateEvent(evtObj) {
 		onChangeNameButtonClick(evtObj);
 	}
 	if(evtObj.type == "click" && evtObj.target.getAttribute("id") == "iconDelete") {
-		onIconDeleteClick(evtObj);
+		var message = evtObj.target.parentNode;
+		onIconDeleteClick(message);
 	}
 	if(evtObj.type == "click" && evtObj.target.getAttribute("id") == "iconEdit") {
-		onIconEditClick(evtObj);
+		var message = evtObj.target.parentNode;
+		onIconEditClick(message);
 	}
 	if(evtObj.type == "keydown" && evtObj.keyCode == 13 && document.activeElement.id == "enterName") {
 		onChangeNameButtonClick(evtObj);
@@ -77,12 +79,22 @@ function delegateEvent(evtObj) {
 		evtObj.preventDefault();
 		onSendButtonClick(evtObj);
 	}
+	if(evtObj.type == "keydown" && evtObj.keyCode == 38 && document.activeElement.id == "messageText") {
+		var name = document.getElementById("name").innerHTML;
+		var i;
+		for (i = messageList.length - 1; i >= 0; i--)
+			if (messageList[i].user == name)
+				break;
+		if (i >= 0) {
+			var message = document.getElementById(messageList[i].id);
+			onIconEditClick(message);
+		}
+	}
 }
 
-function onIconDeleteClick(evtObj) {
+function onIconDeleteClick(message) {
 	var conf = confirm("Confirm removal, please :)");
 	if (conf == true) {
-		var message = evtObj.target.parentNode;
 		var i;
 		for (i = 0; i < messageList.length; i++)
 			if (messageList[i].id == message.id)
@@ -93,8 +105,7 @@ function onIconDeleteClick(evtObj) {
 
 var messageToEdit;
 
-function onIconEditClick(evtObj) {
-	var message = evtObj.target.parentNode;
+function onIconEditClick(message) {
 	var messageArea = document.getElementById("messageText");
 	messageArea.focus();
 	messageArea.value = message.getElementsByTagName("div")[0].getElementsByTagName("span")[1].innerHTML;
@@ -319,7 +330,7 @@ function poll(isHistory) {
 			fatalError();
 		},
 		complete: function() {
-			setTimeout(poll(!errorFlag), 1000);
+			setTimeout(function() { poll(!errorFlag) }, 1000);
 		}
 	});
 };

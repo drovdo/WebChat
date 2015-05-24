@@ -8,7 +8,6 @@ import model.RequestStorage;
 import org.apache.logging.log4j.LogManager;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-import storage.XMLHistory;
 import util.MessageExchange;
 
 import javax.servlet.AsyncContext;
@@ -39,47 +38,51 @@ public class Servlet extends HttpServlet{
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String data = request.getParameter("flag");
-        boolean flag = false;
         try {
-            flag = Boolean.parseBoolean(data);
-            if (flag) {
-                String messages = "";
-                synchronized (messages) {
-                    loadHistory();
-                    messages = formResponse();
-                    RequestStorage.removeAll();
+            if (data != null && !"".equals(data)) {
+                boolean flag = false;
+                flag = Boolean.parseBoolean(data);
+                if (flag) {
+                    String messages = "";
+                    synchronized (messages) {
+                        loadHistory();
+                        messages = formResponse();
+                        RequestStorage.removeAll();
+                    }
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    PrintWriter out = response.getWriter();
+                    out.print(messages);
+                    out.flush();
+                } else {
+                    AsyncContext actx = request.startAsync(request, response);
+                    actx.setTimeout(30000);
+                    contexts.add(actx);
+                    actx.addListener(new AsyncListener() {
+                        public void onTimeout(AsyncEvent arg0) throws IOException {
+
+                            HttpServletResponse response = (HttpServletResponse) arg0.getAsyncContext().getResponse();
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("UTF-8");
+                            PrintWriter out = response.getWriter();
+                            out.print("{\"messages\" : []}");
+                            out.flush();
+                            contexts.remove(arg0.getAsyncContext());
+                        }
+
+                        public void onStartAsync(AsyncEvent arg0) throws IOException {
+                        }
+
+                        public void onError(AsyncEvent arg0) throws IOException {
+                        }
+
+                        public void onComplete(AsyncEvent arg0) throws IOException {
+                        }
+                    });
                 }
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                PrintWriter out = response.getWriter();
-                out.print(messages);
-                out.flush();
-            } else {
-                AsyncContext actx = request.startAsync(request, response);
-                actx.setTimeout(30000);
-                contexts.add(actx);
-                actx.addListener(new AsyncListener() {
-                    public void onTimeout(AsyncEvent arg0) throws IOException {
-
-                        HttpServletResponse response = (HttpServletResponse) arg0.getAsyncContext().getResponse();
-                        response.setContentType("application/json");
-                        response.setCharacterEncoding("UTF-8");
-                        PrintWriter out = response.getWriter();
-                        out.print("{\"messages\" : []}");
-                        out.flush();
-                        contexts.remove(arg0.getAsyncContext());
-                    }
-
-                    public void onStartAsync(AsyncEvent arg0) throws IOException {
-                    }
-
-                    public void onError(AsyncEvent arg0) throws IOException {
-                    }
-
-                    public void onComplete(AsyncEvent arg0) throws IOException {
-                    }
-                });
             }
+            else
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
         catch (Exception e) {
             logger.error(e);
