@@ -45,7 +45,7 @@ public class MessageDaoImpl implements MessageDao {
             insertMessage.setString(1, message.getText());
             insertMessage.setInt(2, message.getId());
             insertMessage.setInt(3, id);
-            insertMessage.setDate(4, new java.sql.Date(message.getDate().getTime()));
+            insertMessage.setTimestamp(4, new java.sql.Timestamp(message.getDate().getTime()));
             insertMessage.executeUpdate();
             logger.info(message.getUser() + " (id = " + id + ") : " + message.getText() + " (id = " + message.getId() + ")");
         } catch (SQLException e) {
@@ -243,10 +243,10 @@ public class MessageDaoImpl implements MessageDao {
         try {
             connection = ConnectionManager.getConnection();
             statement = connection.createStatement();
-            resultSet = statement.executeQuery("select * from messages inner join users on messages.user_id = users.id");
+            resultSet = statement.executeQuery("select * from messages inner join users on messages.user_id = users.id order by date");
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
-                Date date = resultSet.getDate("date");
+                java.util.Date date = resultSet.getDate("date");
                 String user = resultSet.getString("name");
                 String text = resultSet.getString("text");
                 requests.add(new Request(new Message(id, user, text, date), "POST"));
