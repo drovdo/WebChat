@@ -1,12 +1,13 @@
 package controller;
 
+import dao.MessageDao;
+import dao.MessageDaoImpl;
 import model.Message;
 import model.Request;
 import model.RequestStorage;
 import org.apache.logging.log4j.LogManager;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-import org.xml.sax.SAXException;
 import storage.XMLHistory;
 import util.MessageExchange;
 
@@ -18,9 +19,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -35,6 +33,7 @@ public class Servlet extends HttpServlet{
     private static Logger logger = LogManager.getLogger(Servlet.class.getName());
     private Integer id = 0;
     private static List<AsyncContext> contexts = Collections.synchronizedList(new ArrayList<AsyncContext>());
+    private MessageDao messageDao = new MessageDaoImpl();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -114,13 +113,12 @@ public class Servlet extends HttpServlet{
             JSONObject json = MessageExchange.getJSONObject(data);
             Message m = MessageExchange.getClientMessage(json);
             Date time = new Date();
-            logger.info(m.getUser() + " : " + m.getText());
             Request r = new Request();
             r.setActionToDo("POST");
             m.setDate(time);
             m.setId(id);
             r.setMessage(m);
-            XMLHistory.addData(m);
+            messageDao.add(m);
             RequestStorage.addRequest(r);
             synchronized (id) {
                 id++;
@@ -129,7 +127,7 @@ public class Servlet extends HttpServlet{
             List<AsyncContext> contexts = new ArrayList<AsyncContext>(this.contexts);
             this.contexts.clear();
             doResponse(contexts);
-        } catch (ParseException | ParserConfigurationException | SAXException | TransformerException e) {
+        } catch (ParseException e) {
             logger.info(e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
@@ -142,7 +140,7 @@ public class Servlet extends HttpServlet{
         try {
             JSONObject json = MessageExchange.getJSONObject(data);
             Message m = MessageExchange.getClientMessage(json);
-            XMLHistory.deleteData(m);
+            messageDao.delete(m.getId());
             Request r = new Request();
             r.setActionToDo("DELETE");
             r.setMessage(m);
@@ -156,7 +154,7 @@ public class Servlet extends HttpServlet{
         } catch (NullPointerException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             logger.error("Message does not exist");
-        } catch (ParseException | ParserConfigurationException | SAXException | TransformerException | XPathExpressionException e) {
+        } catch (ParseException e) {
             logger.error(e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
@@ -169,7 +167,7 @@ public class Servlet extends HttpServlet{
         try {
             JSONObject json = MessageExchange.getJSONObject(data);
             Message m = MessageExchange.getClientMessage(json);
-            XMLHistory.editData(m);
+            messageDao.update(m);
             Request r = new Request();
             r.setActionToDo("PUT");
             r.setMessage(m);
@@ -183,7 +181,7 @@ public class Servlet extends HttpServlet{
         } catch (NullPointerException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             logger.error("Message does not exist");
-        } catch (ParseException | ParserConfigurationException | SAXException | TransformerException | XPathExpressionException e) {
+        } catch (ParseException e) {
             logger.error(e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
@@ -197,15 +195,12 @@ public class Servlet extends HttpServlet{
         return jsonObject.toJSONString();
     }
 
-    private void loadHistory() throws SAXException, IOException, ParserConfigurationException, TransformerException  {
-        if (XMLHistory.doesStorageExist()) {
-            RequestStorage.addAll(XMLHistory.getMessages());
-            synchronized (id) {
-                id = XMLHistory.getLastId();
-                id++;
-            }
-        } else {
-            XMLHistory.createStorage();
+    private void loadHistory() throws IOException  {
+        RequestStorage.addAll(messageDao.selectAll());
+        messageDao.setUserId();
+        synchronized (id) {
+            id = messageDao.getLastId();
+            id++;
         }
     }
 }
