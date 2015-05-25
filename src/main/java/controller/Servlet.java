@@ -110,7 +110,6 @@ public class Servlet extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("doPost");
         String data = MessageExchange.getMessageBody(request);
         try {
             JSONObject json = MessageExchange.getJSONObject(data);
@@ -138,7 +137,6 @@ public class Servlet extends HttpServlet{
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        logger.info("doDelete");
         String data = MessageExchange.getMessageBody(request);
         try {
             JSONObject json = MessageExchange.getJSONObject(data);
@@ -149,14 +147,14 @@ public class Servlet extends HttpServlet{
             r.setMessage(m);
             RequestStorage.addRequest(r);
             Date time = new Date();
-            logger.info("Message with id  " + m.getId() + " is deleted");
+            logger.info("doDelete: Message with id  " + m.getId() + " is deleted");
             response.setStatus(HttpServletResponse.SC_OK);
             List<AsyncContext> contexts = new ArrayList<AsyncContext>(this.contexts);
             this.contexts.clear();
             doResponse(contexts);
         } catch (NullPointerException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            logger.error("Message does not exist");
+            logger.error("doDelete: Message does not exist");
         } catch (ParseException e) {
             logger.error(e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -165,7 +163,6 @@ public class Servlet extends HttpServlet{
 
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        logger.info("doPut");
         String data = MessageExchange.getMessageBody(request);
         try {
             JSONObject json = MessageExchange.getJSONObject(data);
@@ -176,14 +173,14 @@ public class Servlet extends HttpServlet{
             r.setMessage(m);
             RequestStorage.addRequest(r);
             Date time = new Date();
-            logger.info("Message with id  " + m.getId() + " is edited : " + m.getText());
+            logger.info("doPut: Message with id  " + m.getId() + " is edited : " + m.getText());
             response.setStatus(HttpServletResponse.SC_OK);
             List<AsyncContext> contexts = new ArrayList<AsyncContext>(this.contexts);
             this.contexts.clear();
             doResponse(contexts);
         } catch (NullPointerException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            logger.error("Message does not exist");
+            logger.error("doPut: Message does not exist");
         } catch (ParseException e) {
             logger.error(e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);

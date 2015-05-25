@@ -47,7 +47,7 @@ public class MessageDaoImpl implements MessageDao {
             insertMessage.setInt(3, id);
             insertMessage.setTimestamp(4, new java.sql.Timestamp(message.getDate().getTime()));
             insertMessage.executeUpdate();
-            logger.info(message.getUser() + " (id = " + id + ") : " + message.getText() + " (id = " + message.getId() + ")");
+            logger.info("doPost: " + message.getUser() + " (id = " + id + ") : " + message.getText() + " (id = " + message.getId() + ")");
         } catch (SQLException e) {
             logger.error(e);
         } finally {

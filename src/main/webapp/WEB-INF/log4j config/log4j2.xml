@@ -1,14 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
-    <Appenders>
-        <Console name="console" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%p] %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
-        </Console>
-    </Appenders>
-    <Loggers>
-        <Root level="info">
-            <AppenderRef ref="console"/>
-        </Root>
-    </Loggers>
-</Configuration>
- 
+<configuration status="WARN">
+    <appenders>
+        <console name="console" target="SYSTEM_OUT">
+            <patternLayout pattern="[%p] %d{yyyy-MM-dd HH:mm:ss} %-5p %C{1}:%L - %m%n"/>
+        </console>
+        <JDBC name="DB" tableName="logs">
+            <ConnectionFactory class="db.ConnectionManager"
+                               method="getConnection" />
+            <Column name="date" isEventTimestamp="true" />
+            <Column name="level" pattern="%level" />
+            <Column name="message" pattern="%message" />
+            <Column name="logger" pattern="%class" />
+            <Column name="line" pattern="%L" />
+        </JDBC>
+    </appenders>
+    <loggers>
+        <root level="info">
+            <appenderRef ref="console"/>
+            <appenderRef ref="DB" />
+        </root>
+    </loggers>
+</configuration>
